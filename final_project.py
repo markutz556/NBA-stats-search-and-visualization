@@ -2,6 +2,7 @@
 # SI507 Winter 2018 Final project
 from bs4 import BeautifulSoup
 import csv
+import os
 import requests
 import sqlite3
 import secrets
@@ -14,12 +15,14 @@ team_name={
 	"ATL": "Atlanta Hawks",
 	"BOS": "Boston Celtics",
 	"BKN": "Brooklyn Nets",
+	"NJ": "Brooklyn Nets",
 	"CHA": "Charlotte Hornets",
+	"CHI": "Chicago Bulls",
 	"CLE": "Cleveland Cavaliers",
 	"DAL": "Dallas Mavericks",
 	"DEN": "Denver Nuggets",
 	"DET": "Detroit Pistons",
-	"GSW": "Golden State Warriors",
+	"GS": "Golden State Warriors",
 	"HOU": "Houston Rockets",
 	"IND": "Indiana Pacers",
 	"LAC": "Los Angeles Clippers",
@@ -28,9 +31,10 @@ team_name={
 	"MIA": "Miami Heat",
 	"MIL": "Milwaukee Bucks",
 	"MIN": "Minnesota Timberwolves",
-	"NOP": "New Orleans Pelicans",
-	"NYK": "New York Knicks",
+	"NO": "New Orleans Pelicans",
+	"NY": "New York Knicks",
 	"OKC": "Oklahoma City Thunder",
+	"SEA": "Oklahoma City Thunder",
 	"ORL": "Orlando Magic",
 	"PHI": "Philadelphia 76ers",
 	"PHX": "Phoenix Suns",
@@ -41,6 +45,34 @@ team_name={
 	"UTAH": "Utah Jazz",
 	"WAS": "Washington Wizards"    
   }
+
+playoff=["Boston Celtics",
+		"Cleveland Cavaliers",
+		"Golden State Warriors",
+		"Houston Rockets",
+		"Indiana Pacers",
+		"Miami Heat",
+		"Milwaukee Bucks",
+		"Minnesota Timberwolves",
+		"New Orleans Pelicans",
+		"Oklahoma City Thunder",
+		"Philadelphia 76ers",
+		"Portland Trail Blazers",
+		"San Antonio Spurs",
+		"Toronto Raptors",
+		"Utah Jazz",
+		"Washington Wizards"]
+
+# team class with team name, team arena lat and team arena lng 
+class nbaTeam():
+	def __init__(self, name, lat, lng):
+		self.name = name
+		self.lat = lat
+		self.lng = lng
+
+	def __str__(self):
+		return self.name+' ('+lat+', '+lng+')'
+		
 
 # Create database and tables
 def createDatabase():
@@ -384,22 +416,30 @@ def get_points(player):
 		pass
 		#print('No cached file!')
 
-
 	statement = '''
-			SELECT url FROM Players 
-			WHERE Name=?
+			SELECT p.url, t.Name 
+			FROM Players as p
+				JOIN Teams as t
+				ON t.Id=p.TeamId
+			WHERE p.Name=?
 		'''
 	params = (player,)
 	result = cur.execute(statement,params)
-	url = result.fetchone()[0]
+	res = result.fetchone()
+	url = res[0]
+	tm = res[1]
 	#print(url)
+	if tm in playoff:
+		tableId = 2
+	else:
+		tableId = 1
 
-	points = []
+	points = [player]
 	page = requests.get(url)
 	soup = BeautifulSoup(page.text,'html.parser')
 	head = soup.find_all(class_="tablehead")
 	for i,t in enumerate(head):
-		if i == 2:
+		if i == tableId:
 			table=t.find_all('tr')
 			for k,tr in enumerate(table):
 				if k < 6:
@@ -412,8 +452,7 @@ def get_points(player):
 						if j == len(td)-1:
 							p=d.text
 					if against:
-						points.append(against+' '+p)
-	
+						points.append(against+' '+p)						
 	#try:
 	if player in data:
 		statement = '''
@@ -427,7 +466,7 @@ def get_points(player):
 		res = cur.execute(statement,params)
 		playerId=res.fetchone()[0]
 		#print(playerId)
-		update = (points[0],points[1],points[2],points[3],points[4],playerId)
+		update = (points[1],points[2],points[3],points[4],points[5],playerId)
 		statement = '''
 			UPDATE Points
 			SET Score1=?,
@@ -440,11 +479,11 @@ def get_points(player):
 		cur.execute(statement, update)
 		conn.commit()
 
-		data[player]['score1']=points[0]
-		data[player]['score2']=points[1]
-		data[player]['score3']=points[2]
-		data[player]['score4']=points[3]
-		data[player]['score5']=points[4]
+		data[player]['score1']=points[1]
+		data[player]['score2']=points[2]
+		data[player]['score3']=points[3]
+		data[player]['score4']=points[4]
+		data[player]['score5']=points[5]
 
 	#except:
 	else:
@@ -456,7 +495,7 @@ def get_points(player):
 		res = cur.execute(statement,params)
 		playerId=res.fetchone()[0]
 
-		insertion = (playerId,points[0],points[1],points[2],points[3],points[4])
+		insertion = (playerId,points[1],points[2],points[3],points[4],points[5])
 		statement = 'INSERT INTO Points '
 		statement += 'VALUES (NULL, ?, ?, ?, ?, ?, ?)'
 
@@ -464,11 +503,11 @@ def get_points(player):
 		conn.commit()
 
 		data[player]={}
-		data[player]['score1']=points[0]
-		data[player]['score2']=points[1]
-		data[player]['score3']=points[2]
-		data[player]['score4']=points[3]
-		data[player]['score5']=points[4]
+		data[player]['score1']=points[1]
+		data[player]['score2']=points[2]
+		data[player]['score3']=points[3]
+		data[player]['score4']=points[4]
+		data[player]['score5']=points[5]
 
 	fw = open(CACHE_FNAME,"w")
 	json.dump(data,fw, indent=4)
@@ -495,7 +534,7 @@ def get_preteam(player):
 	#print(res)
 	url = res[0].split('_')[0]+'stats/_'+res[0].split('_')[1]
 
-	team = []
+	team = [player]
 	page = requests.get(url)
 	soup = BeautifulSoup(page.text,'html.parser')
 	head = soup.find_all(class_="team-name")
@@ -503,7 +542,7 @@ def get_preteam(player):
 		if li.text not in team:
 			team.append(li.text)
 	
-	update = ('_'.join(team),player)
+	update = ('_'.join(team[1:]),player)
 	statement = '''
 		UPDATE Players
 		SET TeamPlayed=?
@@ -604,7 +643,7 @@ def plot_game_route(rival):
 			lat = res[1]
 			lon = res[2]
 		
-		if rival[i].split(' ')[2] == 'W' or rival[i].split(' ')[3] == 'W':
+		if rival[i].split(' ')[3] == 'W' or rival[i].split(' ')[4] == 'W':
 			lat_vals_win.append(lat)
 			lon_vals_win.append(lon)
 			text_vals_win.append(rival[i])
@@ -679,6 +718,9 @@ def plot_team_played(team):
 	text_vals_now = []
 
 	for i,t in enumerate(team):
+		if i == 0:
+			continue
+
 		name = team_name[t]
 		statement = '''
 			SELECT Name, ArenaLocation_lat, ArenaLocation_lng 
@@ -688,7 +730,6 @@ def plot_team_played(team):
 		params = (name,)
 		tmp=cur.execute(statement,params)
 		res=tmp.fetchone()
-		print(res)
 
 		if i == len(team)-1:
 			lat_vals_now.append(res[1])
@@ -727,7 +768,7 @@ def plot_team_played(team):
 	plot_data = [now_trace, old_trace]
 
 	layout = dict(
-			title = 'Teams ever played for ',
+			title = 'Teams '+team[0]+' ever played for ',
 			geo = dict(
 				scope='usa',
 				projection=dict( type='albers usa' ),
@@ -765,7 +806,9 @@ def plot_point(point):
 	'''
 	points=[]
 	team=[]
-	for r in point:
+	for i,r in enumerate(point):
+		if i == 0:
+			continue
 		if r.startswith('vs'):
 			points.append(r.split(' ')[1])
 			team.append(r.split(' ')[0])
@@ -778,9 +821,10 @@ def plot_point(point):
 				"marker": {"color": "blue", "size": 12},
 				"mode": "markers",
 				"type": "scatter"}])
-	layout = {"title": "Points in past 5 games", 
+	layout = {"title": "Points for "+point[0]+" in past 5 games", 
 		  "xaxis": {"title": "Games", }, 
-		  "yaxis": {"title": "Points"}}
+		  "yaxis": {"title": "Points"},
+		  "rangemode": 'nonnegative'}
 
 	fig = dict(data=data, layout=layout)
 	py.plot( fig, validate=False, filename='point')       
@@ -788,21 +832,43 @@ def plot_point(point):
 	#conn.close()
 	
 if __name__ == '__main__':
-	#createDatabase()
-	route = ['Boston Celtics','vs  Grizzlies W 113-98','@  Trail Blazers W 97-95','@  Nuggets L 88-82']
+	#
+	#route = ['Boston Celtics','vs  Grizzlies W 113-98','@  Trail Blazers W 97-95','@  Nuggets L 88-82']
 	#get_all_teams()
 	#plot_all_teams()
 	#get_team_route('Boston Celtics')
 	#print(rival)
 	#rival = ['Raptors','Jazz','Suns']
-	plot_game_route(route)
+	#plot_game_route(route)
 	#get_players('Utah Jazz')
-	#team=['DAL','BOS','CLE','UTAH']
+	#team=['Kyrie Irving','DAL','BOS','CLE','UTAH']
 	#plot_team_played(team)
-	#a=get_points('Kyrie Irving')
+	#a=get_points("Vince Carter")
 	#plot_point(a)
 
-'''
+	try:
+		conn = sqlite3.connect(DBNAME)
+		cur = conn.cursor()
+	except:
+		print('Unable to connect the database.')
+
+	try:
+		statement = 'SELECT * FROM Teams'
+		result = cur.execute(statement)
+		res = result.fetchall()
+		if len(res) > 0:
+			choice = str(input('\nDo you want to remove existing data? (yes/no) '))
+			if choice == 'yes':
+				os.remove('NBA_teams.json')
+				os.remove('players.json')
+				os.remove('routes.json')
+				os.remove('points.json')
+				createDatabase()
+				print('\nExisting data removed.')
+
+	except:
+		createDatabase()
+
 	team = []
 	player = []
 	route = []
@@ -813,7 +879,7 @@ if __name__ == '__main__':
 	while user_input != 'exit':
 		
 		if 'help' in user_input: 
-			print(
+			print('''
 	list 
 		available anytime
 		lists all teams in the NBA league
@@ -841,17 +907,14 @@ if __name__ == '__main__':
 	exit
 		exits the program 
 	help
-		lists available commands (these instructions))  
+		lists available commands (these instructions)''')  
 		elif user_input == 'list':
-			player = []
-			route = []
-			point = []
-			preteam = []
 			team = get_all_teams()
 			for i,t in enumerate(team):
 				print(i+1, t)
 
 		elif user_input.startswith('route'):
+			route = []
 			try:
 				idx = int(user_input.split()[1])
 				if len(team)>0 and idx>0 and idx<=len(team):
@@ -868,6 +931,7 @@ if __name__ == '__main__':
 				print('Please enter an int for a team!')
 
 		elif user_input.startswith('player'):
+			player = []
 			try:            
 				idx = int(user_input.split()[1])
 				if len(team)>0 and idx>0 and idx<=len(team):
@@ -883,6 +947,7 @@ if __name__ == '__main__':
 				print('Please enter an int for the team!')
 
 		elif user_input.startswith('point'):
+			point = []
 			try:
 				idx = int(user_input.split()[1])
 				if len(player)>0 and idx>0 and idx<=len(player):
@@ -891,13 +956,15 @@ if __name__ == '__main__':
 					point = get_points(pla)
 					if len(point)>0:
 						for i,p in enumerate(point):
-							print(i+1,p)
+							if i != 0:
+								print(i,p)
 				else:
 					print('No point result for player '+pla+'!')
 			except:
 				print('Please enter an int for a player!')
 
 		elif user_input.startswith('preteam'):
+			preteam = []
 			try:
 				idx = int(user_input.split()[1])
 				if len(player)>0 and idx>0 and idx<=len(player):
@@ -906,7 +973,8 @@ if __name__ == '__main__':
 					preteam = get_preteam(pla)
 					if len(preteam)>0:
 						for i,t in enumerate(preteam):
-							print(i+1,t)
+							if i != 0:
+								print(i,t)
 				else:
 					print('No point result for player '+pla+'!')
 			except:
@@ -931,13 +999,10 @@ if __name__ == '__main__':
 					print('No map result for data '+choosenType+'!')
 			except:
 				print('Please enter a valid data for a visualization!')
-
-			
-
 		else:
 			print('Invalid user input!')
 
 		user_input = str(input('\nEnter command (or "help" for options): '))
 
-	print('Bye!')
-'''
+	print('\nBye!')
+
