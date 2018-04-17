@@ -1,6 +1,11 @@
 # Final project: NBA stats search and visualization
 
 For SI 507, Winter 2018
+## Table of Contents
+1. [Data source](#data-source)
+2. [Plotly](#plotly)
+3. [Code structure](#code-structure)
+4. [Program usage](#program-usage)
 
 ## Data source
  * NBA teams on espn website ([NBA team on ESPN](http://www.espn.com/nba/teams)) 
