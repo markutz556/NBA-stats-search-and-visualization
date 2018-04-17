@@ -6,6 +6,7 @@ For SI 507, Winter 2018
 2. [Plotly](#plotly)
 3. [Code structure](#code-structure)
 4. [Program usage](#program-usage)
+5. [Acknowledgement](#acknowledgement)
 
 ## Data source
  * NBA teams on espn website ([NBA team on ESPN](http://www.espn.com/nba/teams)) 
@@ -26,14 +27,14 @@ For SI 507, Winter 2018
 2. Route info
  * get_team_route(team): get previous 5 games results for a specified team
  * plot_game_route(team): plot the game route for a specified team in US map
-   <br>Green star stands for Win while red dot for Lose.</br> 
+   <br>Green stars stand for Win while red dots for Lose.</br> 
 3. Player info
  * get_players(team): get players for a specified team.
  * get_points(player): get points of a specified player in previous 5 games
  * get_preteam(player): get teams a specified player've ever played for
  * plot_point(point): generate a dot plot for points of a player in past 5 games
  * plot_team_played(team): plot the locations of teams a player've ever played for
-   <br>Green star stands for current team while red dot for previous teams.</br>
+   <br>Green star stands for current team while red dots for previous teams.</br>
 4. Class definitions
  * nbaTeam: class for NBA teams (parameters: team_name, arena_lat, arena_lng)
  * nbaPlayer: class for NBA players (parameters: player_name, webpage_url)
@@ -91,3 +92,7 @@ For SI 507, Winter 2018
 	<li>lists available commands (these instructions)</li>
    </ul>
 </div>
+
+## Acknowledgement
+ * GSI: Deahan
+ * SI507 Teaching Team
