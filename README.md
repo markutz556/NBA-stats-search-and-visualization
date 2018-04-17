@@ -16,8 +16,8 @@ For SI 507, Winter 2018
    
 ## Code structure
 1. Team info
-   * get_all_team(): get the names, arena locations, webpage url for all the NBA teams
-   * plot_all_team(): plot the locations of all NBA team arenas in US map
+ * get_all_team(): get the names, arena locations, webpage url for all the NBA teams
+ * plot_all_team(): plot the locations of all NBA team arenas in US map
 2. Route info
    * get_team_route(team): get previous 5 games results for a specified team
    * plot_game_route(team): plot the game route for a specified team in US map 
