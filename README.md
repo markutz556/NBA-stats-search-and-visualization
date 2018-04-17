@@ -39,40 +39,41 @@ For SI 507, Winter 2018
 2. prompt to delete existing data or not: type "yes" or "no"<br>
 3. Command list:<br>
 <div>
-   <ul>list
-		<li>available anytime</li>
-		<li>lists all teams in the NBA league</li>
-		<li>inputs: no input needed</li>
+   <ul>
+	<p>list</p>
+	<li>available anytime</li>
+	<li>lists all teams in the NBA league</li>
+	<li>inputs: no input needed</li>
    </ul>
-	<ul>route <result_number> 
-		<li>available only if there is an active team list set</li>
-		<li>lists routes for that team in past 5 games<li>
-		<li>valid inputs: an integer 1-len(result_set_size)</li>
+	<p>route result_number</p> 
+	<li>available only if there is an active team list set</li>
+	<li>lists routes for that team in past 5 games<li>
+	<li>valid inputs: an integer 1-len(result_set_size)</li>
    </ul>
-	<ul>player <result_number>
-		<li>available only if there is an active team list set</li>
-		<li>lists all players in that NBA team<li>
-		<li>valid inputs: an integer 1-len(result_set_size)</li>
+	<p>player result_number</p>
+	<li>available only if there is an active team list set</li>
+	<li>lists all players in that NBA team<li>
+	<li>valid inputs: an integer 1-len(result_set_size)</li>
    </ul>
-	<ul>point <result_number> 
-		<li>available only if there is an active player list set</li>
-		<li>lists points for that player in past 5 games</li>
-		<li>valid inputs: an integer 1-len(result_set_size)</li>
+	<p>point result_number</p>
+	<li>available only if there is an active player list set</li>
+	<li>lists points for that player in past 5 games</li>
+	<li>valid inputs: an integer 1-len(result_set_size)</li>
    </ul>
-	<ul>preteam <result_number>
-		<li>available only if there is an active player list set</li>
-		<li>lists teams a player've ever played for<li>
-		<li>valid inputs: an integer 1-len(result_set_size)</li>
+	<p>preteam result_number</p>
+	<li>available only if there is an active player list set</li>
+	<li>lists teams a player've ever played for<li>
+	<li>valid inputs: an integer 1-len(result_set_size)</li>
    </ul>
-	<ul>map <data_type>
-		<li>available only if there is an active result set</li>
-		<li>displays the current results of choosen data type on a map</li>
-		<li>valid inputs: team, route, point, preteam</li>
+	<p>map data_type</p>
+	<li>available only if there is an active result set</li>
+	<li>displays the current results of choosen data type on a map</li>
+	<li>valid inputs: team, route, point, preteam</li>
    </ul>
-	<ul>exit
-		<li>exits the program</li>
+	<p>exit</p>
+	<li>exits the program</li>
    </ul>
-	<ul>help
-		<li>lists available commands (these instructions)</li>
+	<p>help</p>
+	<li>lists available commands (these instructions)</li>
    </ul>
 </div>
