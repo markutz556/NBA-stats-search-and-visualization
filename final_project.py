@@ -72,8 +72,15 @@ class nbaTeam():
 
 	def __str__(self):
 		return self.name+' ('+lat+', '+lng+')'
-		
 
+class nbaPlayer():
+	def __init__(self, name, url=None):
+		self.name = name
+		self.url = url
+
+	def __str__(self):
+		return self.name+' ('+self.url+')'
+		
 # Create database and tables
 def createDatabase():
 	try:
