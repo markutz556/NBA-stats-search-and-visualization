@@ -48,13 +48,13 @@ For SI 507, Winter 2018
    <ul>
 	<p>route result_number</p> 
 	<li>available only if there is an active team list set</li>
-	<li>lists routes for that team in past 5 games<li>
+	<li>lists routes for that team in past 5 games</li>
 	<li>valid inputs: an integer 1-len(result_set_size)</li>
    </ul>
    <ul>
 	<p>player result_number</p>
 	<li>available only if there is an active team list set</li>
-	<li>lists all players in that NBA team<li>
+	<li>lists all players in that NBA team</li>
 	<li>valid inputs: an integer 1-len(result_set_size)</li>
    </ul>
    <ul>
@@ -66,7 +66,7 @@ For SI 507, Winter 2018
    <ul>
 	<p>preteam result_number</p>
 	<li>available only if there is an active player list set</li>
-	<li>lists teams a player've ever played for<li>
+	<li>lists teams a player've ever played for</li>
 	<li>valid inputs: an integer 1-len(result_set_size)</li>
    </ul>
    <ul>
