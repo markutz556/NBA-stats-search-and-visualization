@@ -71,7 +71,7 @@ class nbaTeam():
 		self.lng = lng
 
 	def __str__(self):
-		return self.name+' ('+lat+', '+lng+')'
+		return self.name+' ('+str(self.lat)+', '+str(self.lng)+')'
 
 class nbaPlayer():
 	def __init__(self, name, url=None):
@@ -171,7 +171,6 @@ def get_all_teams():
 		cache_file.close()
 	except:
 		pass
-		#print('No cached file!')
 		
 	teams = []
 	if len(data) == 0:
@@ -187,7 +186,6 @@ def get_all_teams():
 			lng = 0
 			name = t.text
 			url = t['href']
-			teams.append(name)
 			data[name] = {}
 
 			key = secrets.google_places_key
@@ -202,6 +200,11 @@ def get_all_teams():
 				data[name]['lat']=lat
 				data[name]['lng']=lng
 				data[name]['url']=url
+			else:
+				data[name]['lat']=0
+				data[name]['lng']=0
+				data[name]['url']=url
+			team.append(nbaTeam(name,lat,lng))
 
 			insertion = (name,lat,lng,url)
 			statement = 'INSERT INTO Teams '
@@ -216,7 +219,7 @@ def get_all_teams():
 	else:
 		print("Getting cached data for all NBA teams...")
 		for r in data:
-			teams.append(r)
+			teams.append(nbaTeam(r,data[r]['lat'],data[r]['lng']))
 	
 	conn.close()	
 	return teams
@@ -243,22 +246,7 @@ def get_players(team):
 
 	if team in data:
 		for p in data[team]:
-			#print(p)
 			name.append(p) 
-	
-	# try:
-	# 	statement = 
-	# 		SELECT p.Name FROM Teams as t
-	# 			JOIN Players as p
-	# 			ON p.TeamId = t.Id
-	# 		WHERE t.Name=?
-		
-	# 	params = (team,)
-	# 	res = cur.execute(statement,params)
-	# 	results = res.fetchall()
-	# 	tmp=results[0]
-			
-	# except:
 	else:
 		
 		data[team] = {}
@@ -267,7 +255,6 @@ def get_players(team):
 		res=tmp.fetchone()
 		teamId = res[0]
 		url = res[1].split('_')[0]+'roster/_'+res[1].split('_')[1]
-		#print(url)
 		page = requests.get(url)
 		soup = BeautifulSoup(page.text,'html.parser')
 		head = soup.find(class_="tablehead")
@@ -285,7 +272,6 @@ def get_players(team):
 
 						else:				
 							pl.append(c.text)
-				#print(pl)
 				insertion = (pl[0],pl[1],pl[2],pl[3],pl[4],pl[5],pl[6],pl[7],teamId)
 				statement = 'INSERT INTO Players '
 				statement += 'VALUES (NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL)'
@@ -325,7 +311,6 @@ def get_team_route(team):
 		cache_file.close()
 	except:
 		pass
-		#print('No cached file!')
 
 	statement = 'SELECT Id, url FROM Teams WHERE Name="'+team+'"'
 	tmp=cur.execute(statement)
@@ -339,29 +324,14 @@ def get_team_route(team):
 	rival = [team]
 	count=0
 	for li in game:
-		#print(li)
 		if count != 0 and count < 6:
 			against=li.find(class_="game-info").text
 			score=li.find(class_="score").text
 			res=li.find(class_="game-result").text
 			rival.append(against+' '+res+' '+score)		
 		count+=1
-	#print(len(rival))
 
-	#try:
 	if team in data:
-		'''
-		statement = 
-			SELECT * FROM Routes as r
-				JOIN Teams as t
-				ON t.Id = r.TeamId
-			WHERE t.Name=?
-		
-		params = (team,)
-		res = cur.execute(statement,params)
-		tmp=res.fetchone()[0]
-		'''
-		
 		update = (rival[1],rival[2],rival[3],rival[4],rival[5],teamId)
 		statement = '''
 			UPDATE Routes
@@ -381,7 +351,6 @@ def get_team_route(team):
 		data[team]['team4']=rival[4]
 		data[team]['team5']=rival[5]
 
-	#except:
 	else:
 		insertion = (teamId,rival[1],rival[2],rival[3],rival[4],rival[5])
 		statement = 'INSERT INTO Routes '
@@ -421,7 +390,6 @@ def get_points(player):
 		cache_file.close()
 	except:
 		pass
-		#print('No cached file!')
 
 	statement = '''
 			SELECT p.url, t.Name 
@@ -435,7 +403,6 @@ def get_points(player):
 	res = result.fetchone()
 	url = res[0]
 	tm = res[1]
-	#print(url)
 	if tm in playoff:
 		tableId = 2
 	else:
@@ -460,7 +427,6 @@ def get_points(player):
 							p=d.text
 					if against:
 						points.append(against+' '+p)						
-	#try:
 	if player in data:
 		statement = '''
 			SELECT p.Id 
@@ -472,7 +438,6 @@ def get_points(player):
 		params = (player,)
 		res = cur.execute(statement,params)
 		playerId=res.fetchone()[0]
-		#print(playerId)
 		update = (points[1],points[2],points[3],points[4],points[5],playerId)
 		statement = '''
 			UPDATE Points
@@ -492,7 +457,6 @@ def get_points(player):
 		data[player]['score4']=points[4]
 		data[player]['score5']=points[5]
 
-	#except:
 	else:
 		statement = '''
 			SELECT Id FROM Players
@@ -538,7 +502,6 @@ def get_preteam(player):
 	params = (player,)
 	result = cur.execute(statement,params)
 	res = result.fetchone()
-	#print(res)
 	url = res[0].split('_')[0]+'stats/_'+res[0].split('_')[1]
 
 	team = [player]
@@ -561,25 +524,15 @@ def get_preteam(player):
 	return team
 
 # Plot the location for all NBA teams
-def plot_all_teams():
-	try:
-		conn = sqlite3.connect(DBNAME)
-		cur = conn.cursor()
-	except:
-		print('Unable to connect the database.')
-
+def plot_all_teams(res):
 	lat_vals = []
 	lon_vals = []
 	text_vals = []
 
-	statement = 'SELECT Name, ArenaLocation_lat, ArenaLocation_lng FROM Teams'
-	tmp=cur.execute(statement)
-	res=tmp.fetchall()
-
 	for t in res:
-		lat_vals.append(t[1])
-		lon_vals.append(t[2])
-		text_vals.append(t[0])
+		lat_vals.append(t.lat)
+		lon_vals.append(t.lng)
+		text_vals.append(t.name)
 
 	team_loc = [dict(
 			type = 'scattergeo',
@@ -603,9 +556,6 @@ def plot_all_teams():
 				landcolor = "rgb(250, 208, 89)",
 				subunitcolor = "rgb(234, 236, 235)",
 				countrycolor = "rgb(0, 208, 89)",
-				#lataxis = {'range': lat_axis},
-				#lonaxis = {'range': lon_axis},
-				#center= {'lat': center_lat, 'lon': center_lon },
 				countrywidth = 3,
 				subunitwidth = 3
 			),
@@ -613,8 +563,6 @@ def plot_all_teams():
 
 	fig = dict(data=team_loc, layout=layout )
 	py.plot( fig, validate=False, filename='all_teams')       
-
-	conn.close()
 
 # Plot game route for a team
 def plot_game_route(rival):
@@ -637,7 +585,6 @@ def plot_game_route(rival):
 			team=rival[0]
 			home =True
 		else:
-			#print(rival[i].split(' '))
 			team=rival[i].split(' ')[2]
 		statement = 'SELECT Name, ArenaLocation_lat, ArenaLocation_lng FROM Teams WHERE Name LIKE "%'+team+'%"'
 		tmp=cur.execute(statement)
@@ -696,9 +643,6 @@ def plot_game_route(rival):
 				landcolor = "rgb(250, 208, 89)",
 				subunitcolor = "rgb(234, 236, 235)",
 				countrycolor = "rgb(0, 208, 89)",
-				#lataxis = {'range': lat_axis},
-				#lonaxis = {'range': lon_axis},
-				#center= {'lat': center_lat, 'lon': center_lon },
 				countrywidth = 3,
 				subunitwidth = 3
 			),
@@ -793,24 +737,6 @@ def plot_team_played(team):
   
 # Plot histogram for points in last 5 game
 def plot_point(point):
-	'''
-	try:
-		conn = sqlite3.connect(DBNAME)
-		cur = conn.cursor()
-	except:
-		print('Unable to connect the database.')
-
-	statement = 
-			SELECT Score1,Score2,Score3,Score4,Score5 
-			FROM Points as o
-				JOIN Players as p
-				ON p.Id=o.PlayerId
-			WHERE p.Name=?
-		
-	params = (player,)
-	result = cur.execute(statement,params)
-	res = result.fetchone()
-	'''
 	points=[]
 	team=[]
 	for i,r in enumerate(point):
@@ -818,10 +744,16 @@ def plot_point(point):
 			continue
 		if r.startswith('vs'):
 			points.append(r.split(' ')[1])
-			team.append(r.split(' ')[0])
+			if r.split(' ')[0] not in team:
+				team.append(r.split(' ')[0])
+			else:
+				team.append(r.split(' ')[0]+str(i))
 		else:
 			points.append(r.split(' ')[2])
-			team.append(r.split(' ')[0]+' '+r.split(' ')[1])
+			if r.split(' ')[0]+' '+r.split(' ')[1] not in team:
+				team.append(r.split(' ')[0]+' '+r.split(' ')[1])
+			else:
+				team.append(r.split(' ')[0]+' '+r.split(' ')[1]+str(i))
 	
 	data=Data([{'y':points,
 				'x':team,
@@ -835,29 +767,17 @@ def plot_point(point):
 
 	fig = dict(data=data, layout=layout)
 	py.plot( fig, validate=False, filename='point')       
-	
-	#conn.close()
-	
+		
 if __name__ == '__main__':
-	#
-	#route = ['Boston Celtics','vs  Grizzlies W 113-98','@  Trail Blazers W 97-95','@  Nuggets L 88-82']
-	#get_all_teams()
-	#plot_all_teams()
-	#get_team_route('Boston Celtics')
-	#print(rival)
-	#rival = ['Raptors','Jazz','Suns']
-	#plot_game_route(route)
-	#get_players('Utah Jazz')
-	#team=['Kyrie Irving','DAL','BOS','CLE','UTAH']
-	#plot_team_played(team)
-	#a=get_points("Vince Carter")
-	#plot_point(a)
-
 	try:
 		conn = sqlite3.connect(DBNAME)
 		cur = conn.cursor()
 	except:
 		print('Unable to connect the database.')
+	print('\n########################################################')
+	print('Welcome to NBA stats search and visualization program!')
+	print('For SI507, Winter 2018')
+	print('########################################################')
 
 	try:
 		statement = 'SELECT * FROM Teams'
@@ -916,9 +836,10 @@ if __name__ == '__main__':
 	help
 		lists available commands (these instructions)''')  
 		elif user_input == 'list':
-			team = get_all_teams()
-			for i,t in enumerate(team):
-				print(i+1, t)
+			teamCla = get_all_teams()
+			for i,t in enumerate(teamCla):
+				print(i+1, t.name)
+				team.append(t.name)
 
 		elif user_input.startswith('route'):
 			route = []
@@ -991,7 +912,7 @@ if __name__ == '__main__':
 			try:
 				choosenType = str(user_input.split()[1])
 				if len(team)>0 and choosenType=='team':
-					plot_all_teams()
+					plot_all_teams(teamCla)
 					print('\nOpened a web page for '+choosenType+'!')
 				elif len(route)>0 and choosenType=='route':
 					plot_game_route(route)
