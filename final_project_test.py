@@ -89,9 +89,12 @@ class TestDatabase(unittest.TestCase):
 class TestSearch(unittest.TestCase):
 
     def test_get_teams(self):
+        self.name = []
         self.team = get_all_teams()
+        for t in self.team:
+            self.name.append(t.name)
         self.assertEqual(len(self.team), 30)
-        self.assertIn("Boston Celtics", self.team)
+        self.assertIn("Boston Celtics", self.name)
 
     def test_get_players(self):
         self.player = get_players('Utah Jazz')
@@ -121,8 +124,9 @@ class TestMapping(unittest.TestCase):
     # we can't test to see if the maps are correct, but we can test that
     # the functions don't return an error!
     def test_plot_team(self):
+        team = get_all_teams()
         try:
-            plot_all_teams()
+            plot_all_teams(team)
         except:
             self.fail()
 
